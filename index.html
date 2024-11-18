@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+  <title>CW01: Course Booking System</title>
+  <!-- Include Vue.js from a CDN -->
+  <script src="https://unpkg.com/vue@2"></script>
+  <!-- Link to custom stylesheet -->
+  <link rel="stylesheet" type="text/css" href="app.css"/>
+  <!-- Link to Bootstrap CSS for styling -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <!-- Link to external JavaScript file for course data -->
+  <script src="courses.js"></script>
+  <style>
+    /* Add any additional styles here */
+  </style>
+</head>
+<body>
+<div id="app"> <!-- Main Vue.js application container -->
+  <header>
+    <div class="navbar navbar-default">
+      <div class="navbar-header">
+        <!-- Display the site name -->
+        <h1>{{ sitename }}</h1>
+      </div>
+      
+      <div class="nav navbar-nav navbar-right cart">
+        <!-- Checkout button that shows the number of items in the cart -->
+        <button type="button" class="btn btn-default btn-lg" @click="showCheckout">
+          <span class="glyphicon glyphicon-shopping-cart">{{ cartItemCount }}</span> Checkout
+        </button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="row product"> 
+      <div v-if="showProduct"> <!-- Conditional rendering for course display -->
+        <div id="sortMenu">
+          <form>
+            <div>
+              <h4>Search Item:</h4>
+              <!-- Input for searching courses -->
+              <input type="text" v-model="searchQuery" placeholder="Search..." />
+              <h4>Sort Menu:</h4>
+              <!-- Radio buttons for sorting by different attributes -->
+              <input type="radio" id="description" v-model="sortAttribute" name="sortDetail" value="description">
+              <label for="description">Description</label><br>
+              <input type="radio" id="availability" v-model="sortAttribute" name="sortDetail" value="availability">
+              <label for="availability">Availability</label><br>
+              <input type="radio" id="price" v-model="sortAttribute" name="sortDetail" value="price">
+              <label for="price">Price</label>
+              <br> 
+            </div>
+
+            <div>
+              <!-- Radio buttons for sorting order -->
+              <input type="radio" id="ascending" v-model="isAscending" name="sortOrder" :value="true">
+              <label for="ascending">Ascending</label><br>
+              <input type="radio" id="descending" v-model="isAscending" name="sortOrder" :value="false">
+              <label for="descending">Descending</label>
+              <br> 
+            </div>
+          </form>        
+        </div>
+
+        <!-- Loop through filtered courses to display each one -->
+        <div v-for="course in filteredProducts" :key="course.id" class="col-md-2 col-md-offset-1">
+          <figure>
+            <!-- Display course image -->
+            <img :src="course.image" alt="Course Image" width="50%">
+          </figure>
+          <div class="col-md-6 col-md-offset-2 description">
+            <!-- Display course title -->
+            <h2 v-text="course.title"></h2>
+            <!-- Display course description -->
+            <p v-html="course.description"></p>
+            <!-- Display formatted price -->
+            <p class="price">{{ formatPrice(course.price) }}</p>
+            
+            <!-- Button to add course to cart -->
+            <button @click="addToCart(course)" v-if="canAddToCart(course)">Add to cart</button>
+
+            <!-- Inventory status messages -->
+            <span v-if="course.availableInventory === cartCount(course.id)">All out!</span>
+            <span v-else-if="itemsLeft(course) < 25">Only {{ itemsLeft(course) }} left!</span>
+            <span v-else>Buy now!</span>
+
+            <div>
+              <!-- Display course rating as stars -->
+              <span v-for="n in course.rating">★</span>
+              <span v-for="n in 5 - course.rating">☆</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="CheckoutPage" v-else> <!-- Conditional rendering for the checkout page -->
+        <div v-if="showCart" class="cart-items">
+          <h2>Your Cart</h2>
+          <div v-if="cart.length > 0"> <!-- Check if cart has items -->
+            <ul>
+              <!-- Loop through cart products and display them -->
+              <li v-for="course in cartProducts" :key="course.id">
+                {{ course.title }} - {{ formatPrice(course.price) }} (Quantity: {{ cartCount(course.id) }})
+              </li>
+            </ul>
+
+            <div id="checkInfo">
+              <form name="frmCheck" id="frmCheck">
+                <br/>
+                <br/>
+                  <input name="namein" type="text"  placeholder="Name" />
+                  <br/>
+                  <br/>
+                  <input name="phonein" type="text"  placeholder="Phone" />
+                  <br/>
+                  <br/>
+                  <!-- Button to checkout the cart -->
+                   <button @click="">Checkout</button>
+                  <br/>
+                  <br/>
+              </form>
+            </div>
+
+          </div>
+          
+          <div v-else>
+            <p>Your cart is empty.</p> <!-- Message if cart is empty -->
+          </div>
+          
+          
+          <!-- Button to close the cart -->
+          <button @click="showCheckout">Close Cart</button>
+        </div>
+      </div>
+    </div><!--end of row-->
+  </main><!--end of main-->
+</div>
+<script type="text/javascript">
+var APP_LOG_LIFECYCLE_EVENTS = true; // Flag to log lifecycle events
+var webstore = new Vue({
+  el: '#app', // Mount Vue instance to the #app element
+  data: {
+    sitename: "CW01: Course Booking System", // Site name
+    showProduct: true, // Control visibility of courses
+    showCart: false, // Control visibility of cart
+    searchQuery: '', // Search input
+    courses: courses, // Array of courses from external file
+    cart: [], // Cart to hold course IDs
+    sortAttribute: 'price', // Default sort attribute
+    isAscending: true, // Default sort order
+  },
+  methods: {
+    addToCart(course) {
+      this.cart.push(course.id); // Add course ID to cart
+    },
+    cartCount(id) {
+      // Count occurrences of a course ID in the cart
+      return this.cart.filter(item => item === id).length;
+    },
+    itemsLeft(course) {
+      // Calculate items left in stock after considering cart
+      return course.availableInventory - this.cartCount(course.id);
+    },
+    formatPrice(price) {
+      // Format price as a dollar amount
+      if (!parseInt(price)) return ""; // Return empty string if price is not valid
+      return "$" + (price).toFixed(2); // Return formatted price
+    },
+    showCheckout() {
+      this.showProduct = !this.showProduct; // Toggle course visibility
+      this.showCart = true; // Show the cart when clicking checkout
+    },
+    canAddToCart(course) {
+      // Check if the course can be added to the cart
+      return course.availableInventory > this.cartCount(course.id);
+    }
+  },
+  computed: {
+    cartItemCount() {
+      // Return the number of items in the cart
+      return this.cart.length || '';
+    },
+    filteredProducts() {
+      // Filter products based on search query
+      let filtered = this.courses.filter(course =>
+      course.title.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+      return this.sortedProducts(filtered); // Return sorted filtered courses
+    },
+    sortedProducts() {
+      // Sort courses based on selected attribute
+      return (courses) => {
+        let sorted = [...courses];
+
+        // Sort based on the selected attribute
+        if (this.sortAttribute === "description") {
+          sorted.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (this.sortAttribute === "availability") {
+          sorted.sort((a, b) => a.availableInventory - b.availableInventory);
+        } else if (this.sortAttribute === "price") {
+          sorted.sort((a, b) => a.price - b.price);
+        }
+
+        // Reverse the order if not ascending
+        if (!this.isAscending) {
+          return sorted.reverse();
+        }
+        return sorted;
+      };
+    },
+    cartProducts() {
+      // Filter courses that are in the cart
+      return this.courses.filter(course => this.cart.includes(course.id));
+    }
+  },
+  // Lifecycle hooks for debugging and logging
+  beforeCreate: function() {
+    if (APP_LOG_LIFECYCLE_EVENTS) {
+      console.log("beforeCreate");
+    }
+  },
+  created: function() {
+    if (APP_LOG_LIFECYCLE_EVENTS) {
+      console.log("created");
+    }
+  },
+  beforeMount: function() {
+    if (APP_LOG_LIFECYCLE_EVENTS) {
+      console.log("beforeMount");
+    }
+  },
+  mounted: function() {
+    if (APP_LOG_LIFECYCLE_EVENTS) {
+      console.log("mounted"); 
+    }
+  },
+  beforeUpdate: function() {
+    if (APP_LOG_LIFECYCLE_EVENTS) {
+      console.log("beforeUpdate");
+    }
+  },
+  updated: function() {
+    if (APP_LOG_LIFECYCLE_EVENTS) {
+      console.log("updated");
+    }
+  },
+  beforeDestroy: function() {
+    if (APP_LOG_LIFECYCLE_EVENTS) {
+      console
+    }
+  }
+});
+</script>
+</body>
+</html>

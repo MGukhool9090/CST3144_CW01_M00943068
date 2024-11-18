@@ -1,0 +1,57 @@
+body {
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  margin: 0; /* Remove default margin */
+}
+
+.submit {
+  margin:20px;
+  padding: 20px;
+  float: left;
+}
+
+.product {
+  margin: 20px 0; /* Spacing between products */
+}
+
+.product .col-md-2 {
+  flex: 0 0 100%; /* Full width */
+  max-width: 100%; /* No width restriction */
+  width: 100%;
+  padding: 10px;
+}
+
+.description {
+  padding: 15px; /* Padding for description */
+  border: 1px solid #ccc; /* Optional border */
+  border-radius: 5px; /* Rounded corners */
+  background-color: #f9f9f9; /* Light background */
+  overflow: hidden; /* Clear floats to prevent layout issues */
+}
+
+figure {
+  text-align: center; /* Center the image */
+}
+
+img {
+  position: relative;
+  float: left;
+  padding-top: 20px;
+  margin-left: 25px;
+  padding-left: 40px;
+  width: 200px; /* Responsive images */
+  height: 175px; /* Maintain aspect ratio */
+}
+
+#CheckoutPage{
+  padding: 25px;
+  margin: 20px;
+}
+
+#sortMenu{
+  padding-top: 60px;
+  padding-left: 25px;
+  position: absolute;
+  float: left;
+}
+
+
