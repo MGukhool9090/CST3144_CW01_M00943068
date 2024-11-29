@@ -30,6 +30,8 @@
               <h4>Search Item:</h4>
               <input type="text" v-model="searchQuery" placeholder="Search..." />
               <h4>Sort Menu:</h4>
+              <input type="radio" id="title" v-model="sortAttribute" name="sortDetail" value="title">
+              <label for="title">Title</label><br>
               <input type="radio" id="location" v-model="sortAttribute" name="sortDetail" value="location">
               <label for="location">Location</label><br>
               <input type="radio" id="availability" v-model="sortAttribute" name="sortDetail" value="availability">
@@ -206,11 +208,13 @@ var webstore = new Vue({
     return (courses) => {
       let sorted = [...courses];
       if (this.sortAttribute === "location") {
-        sorted.sort((a, b) => a.title.localeCompare(b.title));  // Sorting by title for location
+        sorted.sort((a, b) => a.location.localeCompare(b.location));  // Sorting by title for location
       } else if (this.sortAttribute === "availability") {
         sorted.sort((a, b) => a.availableInventory - b.availableInventory);
       } else if (this.sortAttribute === "price") {
         sorted.sort((a, b) => a.price - b.price);
+      } else if (this.sortAttribute === "title") {
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
       }
       if (!this.isAscending) {
         return sorted.reverse();
