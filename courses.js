@@ -3,7 +3,7 @@ let courses = [
     {
         id:1001,
         title:"Mathematics",
-        description:"A level mathematics class",
+        location:"Bambous",
         price: 50.00,
         image: "images/maths.png",
         availableInventory: 20,
@@ -13,7 +13,7 @@ let courses = [
     {
         id:1002,
         title:"French",
-        description:"A level french class",
+        location:"Port-Louis",
         price: 100.00,
         image: "images/french.png",
         availableInventory: 15,
@@ -23,7 +23,7 @@ let courses = [
     {
         id:1003,
         title:"Art",
-        description:"A level art class",
+        location:"Rose-Hill",
         price: 55.00,
         image: "images/art.png",
         availableInventory: 21,
@@ -33,7 +33,7 @@ let courses = [
     {
         id:1004,
         title:"English",
-        description:"A level mathematics class",
+        location:"Quatres Bornes",
         price: 75.00,
         image: "images/english.png",
         availableInventory: 16,
@@ -43,7 +43,7 @@ let courses = [
     {
         id:1005,
         title:"Hindi",
-        description:"A level hindi class",
+        location:"Flic-en-Flacq",
         price: 35.00,
         image: "images/hindi.png",
         availableInventory: 9,
@@ -53,7 +53,7 @@ let courses = [
     {
         id:1006,
         title:"Biology",
-        description:"A level biology class",
+        location:"Beau Bassin",
         price: 69.00,
         image: "images/biology.png",
         availableInventory: 18,
@@ -63,7 +63,7 @@ let courses = [
     {
         id:1007,
         title:"Physics",
-        description:"A level physics class",
+        location:"Belle Rose",
         price: 99.00,
         image: "images/physics.png",
         availableInventory: 10,
@@ -73,7 +73,7 @@ let courses = [
     {
         id:1008,
         title:"Chemistry",
-        description:"A level chemistry class",
+        location:"Bambous",
         price: 89.00,
         image: "images/chemistry.png",
         availableInventory: 7,
@@ -83,7 +83,7 @@ let courses = [
     {
         id:1009,
         title:"Computer Science",
-        description:"A level computer science class",
+        location:"Coromandel",
         price: 79.00,
         image: "images/computerscience.png",
         availableInventory: 20,
@@ -93,7 +93,7 @@ let courses = [
     {
         id:1010,
         title:"Social Studies",
-        description:"A level social studies class",
+        location:"Port_Louis",
         price: 49.00,
         image: "images/socialstudies.png",
         availableInventory: 11,
