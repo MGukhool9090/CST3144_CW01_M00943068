@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CW01: Course Booking System</title>
+  <link rel="stylesheet" type="text/css" href="app.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <style>
+    .course-item {
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .course-image {
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="navbar navbar-default">
+      <div class="navbar-header">
+        <h1>{{ sitename }}</h1>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+      <div v-if="loading" class="text-center">
+        <p>Loading courses...</p>
+      </div>
+
+      <!-- Search and Sort -->
+      <div class="row">
+        <div v-if="showProduct">
+          <div id="sortMenu" class="col-md-3">
+            <h4>Search Courses</h4>
+            <input type="text" v-model="searchQuery" class="form-control" placeholder="Search by title, location, or price">
+            <hr>
+            <h4>Sort Courses</h4>
+            <label>
+              <input type="radio" v-model="sortBy" value="title"> Sort by Title
+            </label><br>
+            <label>
+              <input type="radio" v-model="sortBy" value="location"> Sort by Location
+            </label><br>
+            <label>
+              <input type="radio" v-model="sortBy" value="availability"> Sort by Availability
+            </label><br>
+            <label>
+              <input type="radio" v-model="sortBy" value="price"> Sort by Price
+            </label><br>
+            <label>
+              <input type="radio" v-model="sortBy" value="rating"> Sort by Rating
+            </label><br>
+            <hr>
+            <h4>Sort Order</h4>
+            <label>
+              <input type="radio" v-model="isAscending" :value="true"> Ascending
+            </label><br>
+            <label>
+              <input type="radio" v-model="isAscending" :value="false"> Descending
+            </label>
+
+            <!-- Cart Modal -->
+            <div v-if="cart.length > 0">
+              <hr>               
+              <button type="button" class="btn btn-default btn-lg" @click="showCheckout" :disabled="cartItemCount === 0">
+                <span class="glyphicon glyphicon-shopping-cart">{{ cartItemCount }}</span> Checkout
+            </div>
+          </div>
+
+        <!-- Course Listings -->
+        <div class="col-md-9">
+          <div class="row">
+            <div v-for="course in filteredCourses" :key="course.id" class="col-md-4 course-item">
+              <img :src="course.image" alt="Course Image" class="course-image">
+              <h3>{{ course.title }}</h3>
+              <p><strong>Location:</strong> {{ course.location }}</p>
+              <p><strong>Price:</strong> {{ formatPrice(course.price) }}</p>
+              <p><strong>Availability:</strong> {{ course.availableInventory }} available</p>
+              <p><strong>Rating:</strong> {{ course.rating }} stars</p>
+              <button @click="addToCart(course)" v-if="canAddToCart(course)">Add to Cart</button>
+              <span v-if="course.availableInventory === cartCount(course.id)">All out!</span>
+              <span v-else-if="itemsLeft(course) < 25">Only {{ itemsLeft(course) }} left!</span>
+              <span v-else>Buy now!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkout -->
+      <div v-if="showCart" class="cart-items">
+        <h2>Your Cart</h2>
+        <div v-if="cart.length > 0">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="course in cartProducts" :key="course.id">
+                <td><img :src="course.image" alt="Course Image" width="100"></td>
+                <td>{{ course.title }}</td>
+                <td>{{ formatPrice(course.price) }}</td>
+                <td>{{ cartCount(course.id) }}</td>
+                <td>{{ formatPrice(course.price * cartCount(course.id)) }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Total Amount Due: {{ formatPrice(totalAmount) }}</p>
+          <div id="checkInfo">
+            <form name="frmCheck" id="frmCheck" @submit.prevent>
+              <label for="namein">Full Name: </label>
+              <input name="namein" type="text" v-model="user.name" placeholder="Name" required />
+              <label for="phonein">Phone Number: </label>
+              <input name="phonein" type="text" v-model="user.phone" placeholder="Phone" required />
+              <button @click="checkout">Checkout</button>
+              <button @click="clearCart">Clear Cart</button>
+            </form>
+          </div>
+        </div>
+        <div v-else>
+          <p>Your cart is empty.</p>
+        </div>
+        <button @click="showCheckout">Close Cart</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        sitename: "CW01: Course Booking System",
+        loading: true,
+        searchQuery: '',
+        sortBy: 'title',
+        isAscending: true,
+        courses: [],
+        cart: [],
+        showProduct: true,
+        showCart: false,
+        user: {
+          name: '',
+          phone: ''
+        }
+      },
+      computed: {
+        filteredCourses() {
+          let filtered = this.courses.filter(course => {
+            const query = this.searchQuery.toLowerCase();
+            return course.title.toLowerCase().includes(query) ||
+              course.location.toLowerCase().includes(query) ||
+              course.price.toString().includes(query);
+          });
+
+          // Sort courses based on the selected sort option
+          if (this.sortBy === 'location') {
+            filtered.sort((a, b) => a.location.localeCompare(b.location));
+          } else if (this.sortBy === 'availability') {
+            filtered.sort((a, b) => a.availableInventory - b.availableInventory);
+          } else if (this.sortBy === 'price') {
+            filtered.sort((a, b) => a.price - b.price);
+          } else if (this.sortBy === 'rating') {
+            filtered.sort((a, b) => a.rating - b.rating);
+          } else if (this.sortBy === 'title') {
+            filtered.sort((a, b) => a.title.localeCompare(b.title));
+          }
+
+          // If descending order is selected, reverse the array
+          if (!this.isAscending) {
+            return filtered.reverse();
+          }
+
+          return filtered;
+        },
+        cartItemCount() {
+          // Calculate the total number of items in the cart (sum of quantities)
+          return this.cart.reduce((total, item) => total + item.quantity, 0);
+        },
+        cartProducts() {
+          return this.courses.filter(course => this.cart.some(item => item.id === course.id));
+        },
+        totalAmount() {
+          return this.cartProducts.reduce((total, course) => {
+            return total + course.price * this.cartCount(course.id);
+          }, 0);
+        }
+      },
+      mounted() {
+        this.fetchCourses();
+      },
+      methods: {
+        fetchCourses() {
+          fetch('http://localhost:3000/courses')
+            .then(response => response.json())
+            .then(data => {
+              this.courses = data;
+              this.loading = false;
+            })
+            .catch(error => {
+              console.error('Error fetching courses:', error);
+              this.loading = false;
+            });
+        },
+        itemsLeft(course) {
+          return course.availableInventory - this.cartCount(course.id);
+        },
+        formatPrice(price) {
+          return `Rs ${price.toFixed(2)}`;
+        },
+        addToCart(course) {
+          const existingCourse = this.cart.find(item => item.id === course.id);
+          if (existingCourse) {
+            existingCourse.quantity++; // Increase the quantity of the existing course
+          } else {
+            this.cart.push({ ...course, quantity: 1 }); // Add new course to the cart with quantity 1
+          }
+        },
+        cartCount(id) {
+          return this.cart.filter(item => item.id === id).reduce((count, item) => count + item.quantity, 0);
+        },
+        canAddToCart(course) {
+          return course.availableInventory > this.cartCount(course.id);
+        },
+        showCheckout() {
+          this.showCart = !this.showCart;
+          this.showProduct = !this.showProduct;
+        },
+        clearCart() {
+          this.cart = [];
+        },
+        checkout() {
+          if (this.user.name && this.user.phone) {
+            const totalAmountDue = this.formatPrice(this.totalAmount);
+            const message = `Thank you for your purchase!\n\nName: ${this.user.name}\nPhone: ${this.user.phone}\nTotal Amount Due: ${totalAmountDue}`;
+            this.clearCart();
+            alert(message);
+            
+          } else {
+            alert("Please fill in your details.");
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
