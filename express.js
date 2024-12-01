@@ -1,52 +1,81 @@
-const express = require('express');
-const { MongoClient, ObjectId } = require('mongodb'); 
-const winston = require('winston');
-const cors = require('cors'); // Import CORS package
+// Import necessary packages
+// Import Express framework for building the server
+const express = require('express');  
+// Import MongoDB client and ObjectId utility for database interaction
+const { MongoClient, ObjectId } = require('mongodb');  
+// Import Winston for logging server activities
+const winston = require('winston');  
+// Import CORS middleware to enable Cross-Origin Resource Sharing
+const cors = require('cors');  
 
-const app = express();
-const port = 3000;
+// Initialize Express application and configure server settings
+// Initialize the Express application
+const app = express();  
+// Define the port for the server to run on
+const port = 3000;  
 
-app.use(express.json());
-app.use(cors()); // Enable CORS for all requests
+// Middleware setup
+// Middleware to parse incoming JSON data into JavaScript objects
+app.use(express.json());  
+// Middleware to enable CORS for all requests, allowing cross-origin requests
+app.use(cors());  
 
-// Set up Winston Logger
+// Set up Winston Logger for logging server activities
 const logger = winston.createLogger({
-  level: 'info', 
-  format: winston.format.combine(
-    winston.format.timestamp(), 
+// Set the logging level to 'info'
+  level: 'info',  
+// Combine multiple log formats
+  format: winston.format.combine(  
+// Add timestamp to each log entry
+    winston.format.timestamp(),  
     winston.format.printf(({ timestamp, level, message }) => {
-      return `${timestamp} [${level}]: ${message}`; 
+// Format the log message with timestamp and log level
+      return `${timestamp} [${level}]: ${message}`;  
     })
   ),
   transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'app.log' })
+// Log to the console
+    new winston.transports.Console(),  
+// Log to a file named 'app.log'
+    new winston.transports.File({ filename: 'app.log' })  
   ],
 });
 
-const url = 'mongodb+srv://mg1415:CW01@cluster0.eyfy3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'; 
-const dbName = 'courses'; 
-const collectionName = 'coursecollection'; 
-let db;
+// MongoDB connection setup
+// MongoDB connection URL
+const url = 'mongodb+srv://mg1415:CW01@cluster0.eyfy3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';  
+// MongoDB database name
+const dbName = 'courses';  
+// MongoDB collection name
+const collectionName = 'coursecollection';  
+// Variable to store the database connection
+let db;  
 
+// Connect to MongoDB and set up the database connection
 MongoClient.connect(url)
   .then((client) => {
-    logger.info('Connected to MongoDB');
-    db = client.db(dbName); 
+// Log successful connection
+    logger.info('Connected to MongoDB');  
+// Set the 'db' object to the connected database
+    db = client.db(dbName);  
   })
   .catch((err) => {
-    logger.error('Error connecting to MongoDB: ', err);
+    // Log any errors during the connection
+    logger.error('Error connecting to MongoDB: ', err);  
   });
 
-// GET route for courses
+// GET route to fetch all courses from the database
 app.get('/courses', async (req, res) => {
   try {
-    logger.info('Fetching all courses');
-    const courses = await db.collection(collectionName).find().toArray();
+// Log that we are fetching all courses
+    logger.info('Fetching all courses');  
+// Retrieve all courses from the collection
+    const courses = await db.collection(collectionName).find().toArray();  
 
-    // Return courses as JSON, including _id field
+    // Return the courses as JSON, converting MongoDB ObjectId to string for easier handling on the frontend
     res.json(courses.map(course => ({
-      id: course._id.toString(),  // Convert _id to string for easier handling in Vue.js
+      // Convert _id to string
+      id: course._id.toString(),  
       title: course.title,
       location: course.location,
       price: course.price,
@@ -55,80 +84,97 @@ app.get('/courses', async (req, res) => {
       rating: course.rating
     })));
   } catch (err) {
-    logger.error('Error fetching courses: ', err);
-    res.status(500).send('Error fetching courses');
+// Log any errors
+    logger.error('Error fetching courses: ', err);  
+// Send error response if something goes wrong
+    res.status(500).send('Error fetching courses');  
   }
 });
 
-// 2. GET route to retrieve a specific course by its ID
+// GET route to fetch a specific course by its ID
 app.get('/courses/:id', async (req, res) => {
-    const { id } = req.params;
+  // Extract the course ID from the URL parameters
+    const { id } = req.params;  
   
     try {
-      // Convert the ID string to ObjectId
-      const objectId = new ObjectId(id);
-      logger.info(`Fetching course with ID: ${id}`);
-  
-      // Fetch the course by its ObjectId
-      const course = await db.collection(collectionName).findOne({ _id: objectId });
+      // Convert string ID to MongoDB ObjectId
+      const objectId = new ObjectId(id);  
+      // Log the course ID being fetched
+      logger.info(`Fetching course with ID: ${id}`);  
+  // Find the course by ID
+      const course = await db.collection(collectionName).findOne({ _id: objectId });  
   
       if (course) {
-        // Send course data as a response
-        res.json(course); 
+        // Return the course if found
+        res.json(course);  
       } else {
-        logger.warn(`Course with ID: ${id} not found`);
-        // Course not found
-        res.status(404).send('Course not found'); 
+// Log a warning if course is not found
+        logger.warn(`Course with ID: ${id} not found`);  
+// Return 404 if the course is not found
+        res.status(404).send('Course not found');  
       }
     } catch (err) {
-      // Handle invalid ObjectId format or other errors
-      logger.error(`Error fetching course with ID: ${id}`, err);
-      res.status(400).send('Invalid course ID format');
+// Log any errors during the fetch
+      logger.error(`Error fetching course with ID: ${id}`, err);  
+// Return 400 for invalid course ID format
+      res.status(400).send('Invalid course ID format');  
     }
   });
+
+// POST route to create a new course
+app.post('/courses', async (req, res) => {
+  // Destructure the course data from the request body
+    const {  title, location, price, image, availableInventory, rating } = req.body;  
   
-  // 3. POST route to create a new course in the "coursecollection" collection
-  app.post('/courses', async (req, res) => {
-    const {  title, location, price, image, availableInventory, rating } = req.body;
-  
-    // Validate that title and up to rating are provided
+    // Validate that required fields are provided
     if (!title || !rating) {
-      logger.warn('Course title or rating not provided');
-      return res.status(400).send('Course name and rating are required');
+// Log warning if required fields are missing
+      logger.warn('Course title or rating not provided');  
+// Return 400 with error message
+      return res.status(400).send('Course name and rating are required');  
     }
   
     try {
-      // Create new course object
-      const newCourse = {  title, location, price, image, availableInventory, rating };
+      // Create the new course object
+      const newCourse = {  title, location, price, image, availableInventory, rating };  
   
-      // Insert the new course into the collection
+      // Insert the new course into the MongoDB collection
       const result = await db.collection(collectionName).insertOne(newCourse); 
-      logger.info('New course created');
+       // Log success message
+      logger.info('New course created'); 
   
-      // Respond with the created course
+      // Respond with the created course data
       res.status(201).json(result.ops[0]); 
     } catch (err) {
-      logger.error('Error saving course', err);
-      res.status(500).send('Error saving course');
+// Log any errors
+      logger.error('Error saving course', err);  
+// Return 500 if there is an error saving the course
+      res.status(500).send('Error saving course');  
     }
   });
   
-  // 4. PUT route to update a course in the "coursecollection" collection
-  app.put('/courses/:id', async (req, res) => {
-    const { id } = req.params;
-    const { title, location, price, image, availableInventory, rating } = req.body;
+// PUT route to update an existing course by its ID
+app.put('/courses/:id', async (req, res) => {
+  // Extract the course ID from the URL parameters
+    const { id } = req.params;  
+    // Extract the updated course data from the body
+    const { title, location, price, image, availableInventory, rating } = req.body;  
   
-    // Validate that title up to rating are provided
+    // Validate that required fields are provided for the update
     if (!title || !rating) {
-      logger.warn('Course name or rating not provided for update');
-      return res.status(400).send('Course name and rating are required');
+// Log warning if required fields are missing
+      logger.warn('Course name or rating not provided for update');  
+// Return 400 with error message
+      return res.status(400).send('Course name and rating are required');  
     }
   
     try {
-      const objectId = new ObjectId(id); // Convert string ID to ObjectId
-      logger.info(`Updating course with ID: ${id}`);
+// Convert string ID to MongoDB ObjectId
+      const objectId = new ObjectId(id);  
+// Log the ID of the course being updated
+      logger.info(`Updating course with ID: ${id}`);  
   
-      // Update course information
+      // Update the course with the new data
       const result = await db.collection(collectionName).updateOne(
         { _id: objectId },
         {
@@ -144,42 +190,58 @@ app.get('/courses/:id', async (req, res) => {
       );
   
       if (result.modifiedCount > 0) {
-        logger.info(`Course with ID: ${id} updated successfully`);
-        res.send('Course updated successfully');
+// Log success message if the course is updated
+        logger.info(`Course with ID: ${id} updated successfully`);  
+// Send success response
+        res.send('Course updated successfully');  
       } else {
-        logger.warn(`Course with ID: ${id} not found for update`);
-        res.status(404).send('Course not found');
+// Log warning if course was not found for update
+        logger.warn(`Course with ID: ${id} not found for update`);  
+// Return 404 if course is not found
+        res.status(404).send('Course not found');  
       }
     } catch (err) {
-      logger.error(`Error updating course with ID: ${id}`, err);
-      res.status(500).send('Error updating course');
+// Log any errors during the update
+      logger.error(`Error updating course with ID: ${id}`, err);  
+// Return 500 if there is an error updating the course
+      res.status(500).send('Error updating course');  
     }
   });
   
-  // 5. DELETE route to remove a course from the "coursecollection" collection
-  app.delete('/courses/:id', async (req, res) => {
-    const { id } = req.params;
+// DELETE route to remove a course by its ID
+app.delete('/courses/:id', async (req, res) => {
+  // Extract the course ID from the URL parameters
+    const { id } = req.params;  
   
     try {
-      const objectId = new ObjectId(id); // Convert string ID to ObjectId
-      logger.info(`Deleting course with ID: ${id}`);
+// Convert string ID to MongoDB ObjectId
+      const objectId = new ObjectId(id);  
+// Log the ID of the course being deleted
+      logger.info(`Deleting course with ID: ${id}`);  
   
-      // Delete the course
+      // Delete the course with the specified ID
       const result = await db.collection(collectionName).deleteOne({ _id: objectId });
   
       if (result.deletedCount > 0) {
-        logger.info(`Course with ID: ${id} deleted successfully`);
-        res.send('Course deleted successfully');
+// Log success if the course is deleted
+        logger.info(`Course with ID: ${id} deleted successfully`);  
+// Send success response
+        res.send('Course deleted successfully');  
       } else {
-        logger.warn(`Course with ID: ${id} not found for deletion`);
-        res.status(404).send('Course not found');
+// Log warning if course was not found for deletion
+        logger.warn(`Course with ID: ${id} not found for deletion`);  
+// Return 404 if course is not found
+        res.status(404).send('Course not found');  
       }
     } catch (err) {
-      logger.error(`Error deleting course with ID: ${id}`, err);
-      res.status(500).send('Error deleting course');
+// Log any errors during the deletion
+      logger.error(`Error deleting course with ID: ${id}`, err);  
+// Return 500 if there is an error deleting the course
+      res.status(500).send('Error deleting course');  
     }
   });
 
+// Start the server on the specified port and log that the server is running
 app.listen(port, () => {
   logger.info(`Server running on http://localhost:${port}`);
 });
