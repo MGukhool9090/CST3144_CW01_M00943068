@@ -1,0 +1,186 @@
+[{
+  "_id": {
+    "$oid": "674980a78b75fde903313d29"
+  },
+  "id": 1001,
+  "title": "Mathematics",
+  "location": "Bambous, Petite Riviere",
+  "price": 590,
+  "image": "images/maths.png",
+  "availableInventory": 999,
+  "rating": 3.5
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d2a"
+  },
+  "id": 1002,
+  "title": "French",
+  "location": "Port-Louis",
+  "price": 100,
+  "image": "images/french.png",
+  "availableInventory": 15,
+  "rating": 3
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d2b"
+  },
+  "id": 1003,
+  "title": "Art",
+  "location": "Rose-Hill",
+  "price": 55,
+  "image": "images/art.png",
+  "availableInventory": 21,
+  "rating": 2
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d2c"
+  },
+  "id": 1004,
+  "title": "English",
+  "location": "Quatres Bornes",
+  "price": 75,
+  "image": "images/english.png",
+  "availableInventory": 16,
+  "rating": 5
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d2d"
+  },
+  "id": 1005,
+  "title": "Hindi",
+  "location": "Flic-en-Flacq",
+  "price": 35,
+  "image": "images/hindi.png",
+  "availableInventory": 9,
+  "rating": 2
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d2e"
+  },
+  "id": 1006,
+  "title": "Biology",
+  "location": "Beau Bassin",
+  "price": 69,
+  "image": "images/biology.png",
+  "availableInventory": 18,
+  "rating": 4
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d2f"
+  },
+  "id": 1007,
+  "title": "Physics",
+  "location": "Belle Rose",
+  "price": 99,
+  "image": "images/physics.png",
+  "availableInventory": 10,
+  "rating": 5
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d30"
+  },
+  "id": 1008,
+  "title": "Chemistry",
+  "location": "Bambous",
+  "price": 89,
+  "image": "images/chemistry.png",
+  "availableInventory": 7,
+  "rating": 1
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d31"
+  },
+  "id": 1009,
+  "title": "Computer Science",
+  "location": "Coromandel",
+  "price": 79,
+  "image": "images/computerscience.png",
+  "availableInventory": 20,
+  "rating": 3
+},
+{
+  "_id": {
+    "$oid": "674980a78b75fde903313d32"
+  },
+  "id": 1010,
+  "title": "Social Studies",
+  "location": "Port_Louis",
+  "price": 49,
+  "image": "images/socialstudies.png",
+  "availableInventory": 11,
+  "rating": 2
+},
+{
+  "_id": {
+    "$oid": "6749ceb0d0732530fa80c9d1"
+  },
+  "title": "Game and Technology",
+  "location": "Grand Port",
+  "price": 1234,
+  "availableInventory": 55,
+  "rating": 3,
+  "image": "images/computerscience.png"
+},
+{
+  "_id": {
+    "$oid": "6749cee0d0732530fa80c9d2"
+  },
+  "title": "Criminology",
+  "location": "Terre Rouge",
+  "price": 666,
+  "availableInventory": 26,
+  "rating": 4.5,
+  "image": "images/maths.png"
+},
+{
+  "_id": {
+    "$oid": "6749cfa71dcfd2f24e2c1c40"
+  },
+  "title": "Psychology",
+  "location": "Terre Rouge",
+  "price": 250,
+  "image": "images/maths.png",
+  "availableInventory": 26,
+  "rating": 5
+},
+{
+  "_id": {
+    "$oid": "6749d1988f923d9e153896d4"
+  },
+  "title": "Special Studies",
+  "location": "Port_Louis, Lalmatie",
+  "price": 900,
+  "image": "images/socialstudies.png",
+  "availableInventory": 11,
+  "rating": 3
+},
+{
+  "_id": {
+    "$oid": "674b22271632440026ecd9b0"
+  },
+  "title": "Dance Practice",
+  "location": "Souillac",
+  "price": 2500,
+  "image": "images/computerscience.png",
+  "availableInventory": 200,
+  "rating": 4
+},
+{
+  "_id": {
+    "$oid": "674c1d3a87e022ec5d00b82b"
+  },
+  "title": "Occult Research",
+  "location": "Albion",
+  "price": 6666,
+  "image": "images/art.png",
+  "availableInventory": 666,
+  "rating": 3
+}]
