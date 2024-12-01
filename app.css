@@ -10,7 +10,7 @@ body {
 header {
   background-color: #0066cc;
   padding: 20px;
-  color: white;
+  color: black;
   text-align: center;
 }
 
@@ -295,6 +295,10 @@ button:disabled {
 #checkInfo button:active {
   background-color: #004a99;
   transform: scale(0.98);
+}
+
+.invalid-feedback{
+  color: red;
 }
 
 /* Cart Empty Message */

@@ -7,12 +7,14 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <style>
+    /* Styling for each course item displayed in the course list */
     .course-item {
       margin-bottom: 20px;
       padding: 20px;
       border: 1px solid #ddd;
       border-radius: 8px;
     }
+    /* Ensures course images fit within the layout */
     .course-image {
       width: 100%;
       height: auto;
@@ -21,26 +23,33 @@
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
+    <!-- Header displaying the name of the site -->
     <header class="navbar navbar-default">
       <div class="navbar-header">
+        <!-- Dynamic binding for site name from Vue data -->
         <h1>{{ sitename }}</h1>
       </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main content area where courses and cart are displayed -->
     <div class="container">
+      <!-- Display loading message while course data is being fetched -->
       <div v-if="loading" class="text-center">
         <p>Loading courses...</p>
       </div>
 
-      <!-- Search and Sort -->
+      <!-- Search and Sort section that allows users to filter courses -->
       <div class="row">
+        <!-- Only display the course list if the 'showProduct' flag is true -->
         <div v-if="showProduct">
+          <!-- Sidebar section for searching and sorting courses -->
           <div id="sortMenu" class="col-md-3">
+            <!-- Search input for filtering courses based on title, location, or price -->
             <h4>Search Courses</h4>
             <input type="text" v-model="searchQuery" class="form-control" placeholder="Search by title, location, or price">
             <hr>
+
+            <!-- Sorting options for ordering courses based on various attributes -->
             <h4>Sort Courses</h4>
             <label>
               <input type="radio" v-model="sortBy" value="title"> Sort by Title
@@ -58,6 +67,8 @@
               <input type="radio" v-model="sortBy" value="rating"> Sort by Rating
             </label><br>
             <hr>
+
+            <!-- Sorting order (ascending or descending) selection -->
             <h4>Sort Order</h4>
             <label>
               <input type="radio" v-model="isAscending" :value="true"> Ascending
@@ -66,7 +77,7 @@
               <input type="radio" v-model="isAscending" :value="false"> Descending
             </label>
 
-            <!-- Cart Modal -->
+            <!-- Cart button that appears once items are added to the cart -->
             <div>
               <hr>               
               <button type="button" class="btn btn-default btn-lg" @click="showCheckout" :disabled="cartItemCount === 0">
@@ -74,26 +85,31 @@
             </div>
           </div>
 
-        <!-- Course Listings -->
+        <!-- Course Listings Section -->
         <div class="col-md-9">
           <div class="row">
+            <!-- Loop through the filtered courses and display them as course items -->
             <div v-for="course in filteredCourses" :key="course.id" class="col-md-4 course-item">
               <img :src="course.image" alt="Course Image" class="course-image">
               <h3>{{ course.title }}</h3>
               <p><strong>Location:</strong> {{ course.location }}</p>
               <p><strong>Price:</strong> {{ formatPrice(course.price) }}</p>
               <p><strong>Availability:</strong> {{ course.availableInventory }} available</p>
-              <p><strong>Rating:</strong> {{ course.rating }} stars</p>
+              <p><strong>Rating:</strong>{{ course.rating }} stars</p>
+              
+              <!-- Button to add course to cart if stock is available -->
               <button @click="addToCart(course)" v-if="canAddToCart(course)">Add to Cart</button>
+              <!-- Display availability status based on inventory -->
               <span v-if="course.availableInventory === cartCount(course.id)">All out!</span>
               <span v-else-if="itemsLeft(course) < 25">Only {{ itemsLeft(course) }} left!</span>
               <span v-else>Buy now!</span>
+              
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Checkout -->
+      <!-- Checkout Section displayed when cart is visible -->
       <div v-if="showCart" class="cart-items">
         <h2>Your Cart</h2>
         <div v-if="cart.length > 0">
@@ -108,6 +124,7 @@
               </tr>
             </thead>
             <tbody>
+              <!-- Loop through cart items and display them in a table -->
               <tr v-for="course in cartProducts" :key="course.id">
                 <td><img :src="course.image" alt="Course Image" width="100"></td>
                 <td>{{ course.title }}</td>
@@ -117,21 +134,46 @@
               </tr>
             </tbody>
           </table>
+          <!-- Display the total amount due for the cart items -->
           <p>Total Amount Due: {{ formatPrice(totalAmount) }}</p>
           <div id="checkInfo">
             <form name="frmCheck" id="frmCheck" @submit.prevent>
+              <!-- Form for entering user details during checkout -->
               <label for="namein">Full Name: </label>
-              <input name="namein" type="text" v-model="user.name" placeholder="Name" required />
+              <input 
+                name="namein" 
+                type="text" 
+                v-model="user.name" 
+                placeholder="Name" 
+                required 
+                :class="{'is-invalid': !isNameValid}" 
+                @input="validateName"
+              />
+              <div v-if="!isNameValid" class="invalid-feedback">Name must contain letters only.</div>
+
               <label for="phonein">Phone Number: </label>
-              <input name="phonein" type="text" v-model="user.phone" placeholder="Phone" required />
-              <button @click="checkout">Checkout</button>
+              <input 
+                name="phonein" 
+                type="text" 
+                v-model="user.phone" 
+                placeholder="Phone" 
+                required 
+                :class="{'is-invalid': !isPhoneValid}" 
+                @input="validatePhone"
+              />
+              <div v-if="!isPhoneValid" class="invalid-feedback">Phone number must contain numbers only.</div>
+
+              <button @click="checkout" :disabled="!isFormValid">Checkout</button>
+
               <button @click="clearCart">Clear Cart</button>
             </form>
           </div>
         </div>
+        <!-- If the cart is empty, display a message -->
         <div v-else>
           <p>Your cart is empty.</p>
         </div>
+        <!-- Button to close the cart and return to the course list -->
         <button @click="showCheckout">Close Cart</button>
       </div>
 
@@ -142,21 +184,24 @@
     new Vue({
       el: '#app',
       data: {
-        sitename: "CW01: Course Booking System",
-        loading: true,
-        searchQuery: '',
-        sortBy: 'title',
-        isAscending: true,
-        courses: [],
-        cart: [],
-        showProduct: true,
-        showCart: false,
-        user: {
+        sitename: "CW01: Course Booking System", // Name of the site displayed in header
+        loading: true, // Flag to indicate whether data is being fetched
+        searchQuery: '', // User's search query for filtering courses
+        sortBy: 'title', // Default sorting option for courses (by title)
+        isAscending: true, // Default sorting order (ascending)
+        courses: [], // Array to store course data fetched from the server
+        cart: [], // Array to store items in the cart
+        showProduct: true, // Flag to toggle visibility of product listings
+        showCart: false, // Flag to toggle visibility of the cart
+        user: { // Object to store user information for checkout
           name: '',
           phone: ''
-        }
+        },
+        isNameValid: false, // Validation flag for the name input
+        isPhoneValid: false // Validation flag for the phone number input
       },
       computed: {
+        // Filter courses based on the search query entered by the user
         filteredCourses() {
           let filtered = this.courses.filter(course => {
             const query = this.searchQuery.toLowerCase();
@@ -165,7 +210,7 @@
               course.price.toString().includes(query);
           });
 
-          // Sort courses based on the selected sort option
+          // Sort courses based on the selected sorting criteria
           if (this.sortBy === 'location') {
             filtered.sort((a, b) => a.location.localeCompare(b.location));
           } else if (this.sortBy === 'availability') {
@@ -178,78 +223,104 @@
             filtered.sort((a, b) => a.title.localeCompare(b.title));
           }
 
-          // If descending order is selected, reverse the array
+          // If descending order is selected, reverse the sorted list
           if (!this.isAscending) {
             return filtered.reverse();
           }
 
           return filtered;
         },
+        // Compute the total number of items in the cart (sum of quantities)
         cartItemCount() {
-          // Calculate the total number of items in the cart (sum of quantities)
           return this.cart.reduce((total, item) => total + item.quantity, 0);
         },
+        // Filter and return the products in the cart by their IDs
         cartProducts() {
           return this.courses.filter(course => this.cart.some(item => item.id === course.id));
         },
+        // Calculate the total amount of the cart by multiplying price with quantity
         totalAmount() {
           return this.cartProducts.reduce((total, course) => {
             return total + course.price * this.cartCount(course.id);
           }, 0);
+        },
+        // Form validity (whether name and phone are valid)
+        isFormValid() {
+          return this.isNameValid && this.isPhoneValid;
         }
       },
       mounted() {
+        // Fetch course data from the server once the component is mounted
         this.fetchCourses();
       },
       methods: {
+        // Fetch course data from the backend API
         fetchCourses() {
           fetch('http://localhost:3000/courses')
             .then(response => response.json())
             .then(data => {
-              this.courses = data;
-              this.loading = false;
+              this.courses = data; // Store fetched data in courses array
+              this.loading = false; // Set loading flag to false after data is loaded
             })
             .catch(error => {
               console.error('Error fetching courses:', error);
-              this.loading = false;
+              this.loading = false; // Set loading flag to false if an error occurs
             });
         },
+        // Calculate the remaining number of available items for a specific course
         itemsLeft(course) {
           return course.availableInventory - this.cartCount(course.id);
         },
+        // Format price to display it with currency symbol
         formatPrice(price) {
           return `Rs ${price.toFixed(2)}`;
         },
+        // Add a course to the cart
         addToCart(course) {
           const existingCourse = this.cart.find(item => item.id === course.id);
           if (existingCourse) {
-            existingCourse.quantity++; // Increase the quantity of the existing course
+            existingCourse.quantity++; // Increase quantity of the course if it already exists in the cart
           } else {
-            this.cart.push({ ...course, quantity: 1 }); // Add new course to the cart with quantity 1
+            this.cart.push({ ...course, quantity: 1 }); // Add new course to the cart with initial quantity of 1
           }
         },
+        // Calculate the total quantity of a specific course in the cart
         cartCount(id) {
           return this.cart.filter(item => item.id === id).reduce((count, item) => count + item.quantity, 0);
         },
+        // Check if a course can be added to the cart based on its availability
         canAddToCart(course) {
           return course.availableInventory > this.cartCount(course.id);
         },
+        // Toggle the visibility of the checkout cart
         showCheckout() {
-          this.showCart = !this.showCart;
-          this.showProduct = !this.showProduct;
+          this.showCart = !this.showCart; // Toggle visibility of the cart
+          this.showProduct = !this.showProduct; // Toggle visibility of product listings
         },
+        // Validate name to ensure it contains only letters
+        validateName() {
+          const namePattern = /^[A-Za-z\s]+$/; // Regular expression for letters only (allow spaces)
+          this.isNameValid = namePattern.test(this.user.name);
+        },
+
+        // Validate phone number to ensure it contains only digits
+        validatePhone() {
+          const phonePattern = /^[0-9]+$/; // Regular expression for digits only
+          this.isPhoneValid = phonePattern.test(this.user.phone);
+        },
+        // Clear all items from the cart
         clearCart() {
-          this.cart = [];
+          this.cart = []; // Empty the cart
         },
+        // Handle checkout process
         checkout() {
-          if (this.user.name && this.user.phone) {
-            const totalAmountDue = this.formatPrice(this.totalAmount);
+          if (this.isNameValid && this.isPhoneValid) {
+            const totalAmountDue = this.formatPrice(this.totalAmount); // Format the total amount due
             const message = `Thank you for your purchase!\n\nName: ${this.user.name}\nPhone: ${this.user.phone}\nTotal Amount Due: ${totalAmountDue}`;
-            this.clearCart();
-            alert(message);
-            
+            this.clearCart(); // Clear the cart after checkout
+            alert(message); // Display confirmation message to the user
           } else {
-            alert("Please fill in your details.");
+            alert("Please fill in your details."); // Show alert if user details are missing
           }
         }
       }
